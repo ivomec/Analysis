@@ -19,10 +19,7 @@ async function fileToGenerativePart(file) {
         reader.onloadend = () => resolve(reader.result.split(',')[1]);
         reader.readAsDataURL(file);
     });
-    // Gemini API가 이해하는 공식적인 형식만 반환합니다.
-    return {
-        inlineData: { data: await base64EncodedDataPromise, mimeType: file.type }
-    };
+    return { inlineData: { data: await base64EncodedDataPromise, mimeType: file.type } };
 }
 
 async function excelFileToText(file) {
@@ -62,9 +59,14 @@ async function analyzeAll() {
 - 환자 이름: ${document.getElementById('patient-name').value || '정보 없음'}
 - 품종: ${document.getElementById('patient-breed').value || '정보 없음'}
 - 나이: ${document.getElementById('patient-age').value || '정보 없음'}
-- 특이사항 및 주요 증상/소견: ${document.getElementById('main-symptoms').value || '정보 없음'}
+- 성별: ${document.getElementById('patient-sex').value || '정보 없음'}
+- 체중 (kg): ${document.getElementById('patient-weight').value || '정보 없음'}
+- 검진일: ${document.getElementById('exam-date').value || '정보 없음'}
+- 특이사항 / 주요 증상 (공통): ${document.getElementById('main-symptoms').value || '정보 없음'}
 `;
         
+        const dentistFindings = document.getElementById('dentist-findings').value;
+
         const parts = [];
         let internalAnalysisInstructions = '';
 
@@ -212,12 +214,27 @@ async function analyzeAll() {
 `
         };
 
+        const dentistFindings = document.getElementById('dentist-findings').value;
+        if (dentistFindings) {
+            const originalImagePrompt = prompts.image;
+            prompts.image = `
+# [원장님 치과 사전 소견 (최우선 참고 지침)]
+**아래 소견은 치과 전문가인 원장님의 사전 진단입니다. 지금부터 분석할 이미지 중 치과 관련 이미지를 발견하면, 반드시 아래 소견을 최우선 기준으로 삼아 분석을 심화하고 레포트를 작성해야 합니다.**
+---
+${dentistFindings}
+---
+
+# [기본 이미지 분석 지침 (안과, 영상의학, 심전도, 그리고 위 소견을 반영한 치과)]
+${originalImagePrompt}
+`;
+        }
+
         let hasAnyData = false;
 
         for (const input of fileInputs) {
             let dataContent = '';
             let hasDataForThisInput = false;
-            const key = input.id.split('-')[0].replace('all', 'image'); // 'all-images-file' -> 'image'
+            const key = input.id.split('-')[0].replace('all', 'image');
 
             if (input.type === 'excel') {
                 const file = document.getElementById(input.id).files[0];
@@ -256,12 +273,12 @@ async function analyzeAll() {
 당신은 '금호동물병원'의 모든 데이터를 통합 분석하는 'AI 진단 마스터 어시스턴트'입니다. 당신의 임무는 지금부터 제공되는 환자 정보와 여러 종류의 검사 데이터, 그리고 각 데이터를 어떻게 처리해야 하는지에 대한 상세 지침을 모두 읽고, 최종적으로 **두 개의 완벽하게 분리된 HTML 리포트**를 생성하는 것입니다.
 
 **[최상위 절대 임무 및 규칙]**
-1.  **AI 자동 분류 (매우 중요):** 당신의 첫 번째 임무는 첨부된 **이미지 파일들을 보고 스스로 어떤 분야(안과, 치과, 영상의학, 심전도)에 해당하는지 판단**하는 것입니다. 각 이미지를 올바른 분야의 전문가로서 분석해야 합니다. 예를 들어, 눈 사진은 '안과 지침'에 따라, 흉부 엑스레이는 '영상 지침'에 따라 분석합니다.
+1.  **AI 자동 분류 및 원장님 소견 반영 (매우 중요):** 당신의 첫 번째 임무는 첨부된 **이미지 파일들을 보고 스스로 어떤 분야(안과, 치과, 영상의학, 심전도)에 해당하는지 판단**하는 것입니다. 특히, **치과 이미지를 분석할 때는 제공된 '원장님 치과 사전 소견'을 절대적인 기준으로 삼아 분석을 심화**해야 합니다.
 2.  **듀얼 리포트 생성:** 당신의 최종 결과물은 반드시 **두 개**여야 합니다: '보호자용 리포트'와 '수의사용 리포트'.
-3.  **분리 제출:** 두 리포트 사이에는 **반드시 \`<!-- AI_REPORT_SEPARATOR -->\` 라는 특수 구분자**를 삽입하여 제출해야 합니다. 이 구분자 외에 다른 어떤 텍스트도 두 리포트 사이에 있어서는 안 됩니다.
-4.  **지침 완벽 준수:** 지금부터 제공될 각 분야별 상세 지침을 완벽하게 준수하여 각 리포트를 작성해야 합니다. **특히 보호자용 리포트에는 모든 정상 수치를 반드시 포함하고, 수의사용 리포트는 비정상 소견 위주로 요약하는 규칙을 반드시 지켜야 합니다.**
-5.  **자율적 통합:** 모든 분야의 분석 결과를 종합하여 '수의사용 리포트'에는 마취 위험도 평가, 종합 감별 진단 목록 등을 포함해야 합니다.
-6.  **최종 출력 형식:** 당신의 응답은 오직 HTML 코드와 그 사이의 구분자로만 구성되어야 합니다. 다른 어떤 설명도 추가하지 마십시오.
+3.  **분리 제출:** 두 리포트 사이에는 **반드시 \`<!-- AI_REPORT_SEPARATOR -->\` 라는 특수 구분자**를 삽입하여 제출해야 합니다.
+4.  **지침 완벽 준수:** 제공될 각 분야별 상세 지침을 완벽하게 준수하여 각 리포트를 작성해야 합니다. **특히 보호자용 리포트에는 모든 정상 수치를 반드시 포함하고, 수의사용 리포트는 비정상 소견 위주로 요약하는 규칙을 반드시 지켜야 합니다.**
+5.  **자율적 통합:** 모든 분석 결과를 종합하여 '수의사용 리포트'에는 마취 위험도 평가, 종합 감별 진단 목록 등을 포함해야 합니다.
+6.  **최종 출력 형식:** 당신의 응답은 오직 HTML 코드와 그 사이의 구분자로만 구성되어야 합니다.
 
 ---
 **[환자 정보]**
