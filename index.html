@@ -6,6 +6,8 @@
     <title>🩺 AI 수의 분석 시스템 🐾</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- 파비콘 404 오류 방지를 위한 링크 (아이콘이 없어도 오류는 사라짐) -->
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
 
@@ -20,6 +22,7 @@
             <fieldset>
                 <legend>✨ 환자 정보 입력</legend>
                 <div class="form-grid">
+                    <!-- ... 다른 입력 필드는 그대로 ... -->
                     <div class="form-group">
                         <label for="patient-name">🐾 이름</label>
                         <input type="text" id="patient-name" required>
@@ -55,7 +58,8 @@
                     </div>
                     <div class="form-group">
                         <label for="weight">⚖️ 체중 (kg)</label>
-                        <input type="number" id="weight" step="0.1" min="0" placeholder="예: 5.2">
+                        <!-- step 속성을 0.01로 변경 -->
+                        <input type="number" id="weight" step="0.01" min="0" placeholder="예: 5.25">
                     </div>
                      <div class="form-group">
                         <label for="visit-date">🗓️ 검진일</label>
