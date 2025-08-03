@@ -17,6 +17,12 @@ header h1 {
     color: #005a9c;
     text-align: center;
 }
+header .subtitle {
+    text-align: center;
+    color: #555;
+    margin-top: -10px;
+    font-size: 0.9em;
+}
 .card {
     background: #fdfdfd;
     border: 1px solid #eee;
@@ -37,7 +43,7 @@ input[type="text"], textarea, input[type="file"] {
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box; /* important */
+    box-sizing: border-box;
 }
 textarea {
     resize: vertical;
@@ -78,18 +84,18 @@ button:hover {
     100% { transform: rotate(360deg); }
 }
 .result-card {
-    background: #eef7ff;
-    border: 1px solid #cce4ff;
+    background: #ffffff;
+    border: 1px solid #ddd;
     border-radius: 5px;
     padding: 20px;
     margin-top: 20px;
 }
-.result-card h3 {
+.result-card h2 {
     color: #005a9c;
     margin-top: 0;
-    border-bottom: 2px solid #b3d7ff;
+    border-bottom: 3px solid #005a9c;
     padding-bottom: 10px;
 }
 .result-card .content {
-    white-space: pre-wrap; /* This makes the AI's formatting (like line breaks) appear correctly */
+    white-space: normal; /* pre-wrap에서 normal로 변경하여 HTML이 자유롭게 렌더링되도록 함 */
 }
