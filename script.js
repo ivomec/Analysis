@@ -12,17 +12,41 @@ const veterinarianReportContent = document.querySelector('#veterinarian-report-c
 // 3. 분석 시작 버튼 이벤트 리스너
 analyzeButton.addEventListener('click', analyzeAll);
 
-// 파일 변환 함수
+// 4. 파일 변환 함수
 async function fileToGenerativePart(file) {
     const base64EncodedDataPromise = new Promise((resolve) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result.split(',')[1]);
         reader.readAsDataURL(file);
     });
-    return { inlineData: { data: await base64EncodedDataPromise, mimeType: file.type } };
+    // Gemini API가 이해하는 공식적인 형식만 반환합니다.
+    return {
+        inlineData: { data: await base64EncodedDataPromise, mimeType: file.type }
+    };
 }
 
-// 4. 메인 분석 함수
+async function excelFileToText(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = event.target.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const textData = XLSX.utils.sheet_to_csv(worksheet);
+                resolve(textData);
+            } catch (e) {
+                reject(new Error("엑셀 파일을 읽는 중 오류가 발생했습니다: " + e.message));
+            }
+        };
+        reader.onerror = (error) => reject(error);
+        reader.readAsBinaryString(file);
+    });
+}
+
+
+// 5. 메인 분석 함수
 async function analyzeAll() {
     if (API_KEY === 'YOUR_API_KEY') {
         alert('script.js 파일에 유효한 API 키를 입력해주세요.');
@@ -45,12 +69,9 @@ async function analyzeAll() {
         let internalAnalysisInstructions = '';
 
         const fileInputs = [
-            { id: 'internal-medicine-data', type: 'text', name: '내과 검사 결과' },
-            { id: 'ophthalmology-file', type: 'file', name: '안과' },
-            { id: 'dentistry-file', type: 'file', name: '치과' },
-            { id: 'imaging-file', type: 'file', name: '영상의학' },
-            { id: 'auscultation-file', type: 'file', name: '청진' },
-            { id: 'ecg-file', type: 'file', name: '심전도' }
+            { id: 'internal-medicine-file', type: 'excel', name: '내과' },
+            { id: 'all-images-file', type: 'image', name: '이미지/영상' },
+            { id: 'auscultation-file', type: 'audio', name: '청진' }
         ];
 
         // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
@@ -78,7 +99,6 @@ async function analyzeAll() {
 5.  특수 검사 판독 규칙 적용: 안과 검사(PLR, STT), 소변 검사(Blood), 혈압에 대한 지정된 코멘트 추가.
 6.  최종 요약 및 권장 사항 (Final Summary & Recommendations): [한눈에 보는 건강 상태 요약]과 [앞으로 이렇게 관리해주세요!] (이상 수치와 직접 관련된 맞춤 관리 방안 5가지) 제시.
 7.  맞춤 Q&A (Custom Q&A): 주요 이상 항목에 대한 구체적인 예상 질문과 답변 5개 생성.
-8.  감사 인사 및 푸터: "소중한 가족 [환자이름]의 건강을 저희 **치과 특화 금호동물병원**에 믿고 맡겨주셔서 진심으로 감사드립니다. [환자이름]이가 앞으로도 건강하고 행복한 날들을 보낼 수 있도록 저희가 곁에서 함께 하겠습니다. ❤", 병원 정보, 카카오톡 버튼, 면책 조항 포함.
 
 # [내과 수의사용 지침]
 ## [ROLE & PERSONA]
@@ -98,7 +118,7 @@ async function analyzeAll() {
 5.  추천 진단 계획 (Recommended Diagnostic Plan): 확진을 위해 필요한 추가 검사나 절차를 우선순위에 따라 제안.
 6.  최종 요약 및 면책 조항 (Final Summary & Disclaimer): AI의 최종 소견 요약과 면책 조항 포함.
 `,
-            ophthalmology: `
+            image: `
 # [안과 지침]
 ## [ROLE & PERSONA]
 당신은 '금호동물병원 AI 안구 분석 및 소통 어시스턴트'입니다. 모든 분석은 표준 수의학 교과서에 기반한 보편적이고 정립된 지식에 근거해야 합니다.
@@ -119,8 +139,7 @@ async function analyzeAll() {
 3.  보호자용 리포트의 [한눈에 보는 건강 상태 요약] 에는 이상의 원인에 대해서 2-3개 정도 완곡하게 제시한다. (예시 낮은 안압 : 안압이 정상범위보다 약간 낮게 측정 되었어요, 이는 안구내 염증을 일컫는 포도막염의 가능성이 있습니다. 이는 올바른 안약을 사용하고 잘 관리하면 좋아질 확률이 높으니 너무 걱정하지 말고 의료진의 지시를 잘 따르는 것이 중요해요 등등 의 자세한 설명을 해준다.)
 ### [수의사용 리포트 (HTML)]
 1.  제출된 데이터 목록, 정량 데이터 요약(정상 범위와 함께 표시), AI 영상 분석 소견(좌/우안 구분, 한글 의학 용어), 의심 진단명(한글), 감별 진단 목록(한글), AI 코멘트 및 권장 사항, 예후에 대한 일반적인 정보 포함.
-`,
-            dentistry: `
+
 # [치과 지침]
 ## [ROLE & PERSONA]
 당신은 '치과 특화 금호동물병원'의 유능한 AI 어시스턴트입니다.
@@ -140,8 +159,7 @@ async function analyzeAll() {
 2.  서론: 환자 정보, 원장님 소견 요약, 이미지 자료 목록
 3.  AI 종합 분석 소견: 전반적 구강 상태 평가, 치아별 상세 분석(원장님 진단 소견 '★' 표시 및 하이라이트), 추가 관찰 소견
 4.  결론 및 제언: 분석 요약, 추가 검사 제안
-`,
-            imaging: `
+
 # [영상 지침]
 ## [ROLE & PERSONA]
 너는 '닥터 금호 AI'다. 세계 최고의 동물 영상의학(엑스레이, CT, 초음파) 분석가이자 데이터 과학자다.
@@ -158,25 +176,7 @@ async function analyzeAll() {
 1.  어조: 진단 보조 및 의학 정보 제공을 목표로 간결하고 전문적인 어조 사용.
 2.  섹션별 색상 가이드 적용: 주요 소견(#F5F5F5), 상세 분석(#E3F2FD), 감별 진단(#E8EAF6), 추천 사항(#FAFAFA).
 3.  섹션 지침: [주요 소견 📋], [상세 분석 📊](VHS, VLAS 포함), [감별 진단 🧠], [추천 사항 📝](추가 검사, 치료 계획, 예후), [참고 자료 📚]
-`,
-            auscultation: `
-# [청진 지침]
-## [AI 페르소나]
-*   수의사용: 수의학, 심장학, 음향 공학 분야의 세계 최고 권위자.
-*   보호자용: 의료인이 아닌, AI 분석 전문가.
-## [AI 작업 절차 및 규칙]
-1.  음향 데이터 분석: 노이즈 제거, 특징 추출(BPM, Murmur, RPM, Crackles, Wheezes)
-2.  분석의 일관성: 수의학 교과서에 명시된 확립된 지식 기반.
-3.  **매우 중요:** 보호자용 리포트에는 모든 검사 항목(정상 소견 포함)을 절대 빠짐없이 포함해야 합니다. 수의사용 리포트에는 비정상 소견 위주로 요약합니다.
-## [리포트 생성 지침]
-### [보호자용 리포트 (HTML)]
-1.  어조: 따뜻하고 부드러운 완곡한 표현 사용.
-2.  구성: 한눈에 보는 건강 상태 요약, 검사별 상세 결과(의학용어 쉬운 설명과 함께), 수의사 코멘트, 맞춤 관리법 5가지, 맞춤 Q&A 3가지, 감사 인사.
-### [수의사용 리포트 (HTML)]
-1.  언어 및 용어: 한글 작성 원칙, 핵심 의학 용어는 영문 병기.
-2.  구성: 청진음 분석 요약(표 형식), 감별 진단 목록(확률 순), 추천 추가 검사, 치료 계획 제안(교과서 기반 표준 치료 계획, 약물, 용량, 수술, 예후 포함).
-`,
-            ecg: `
+
 # [심전도 지침]
 ## [AI 페르소나 및 핵심 임무]
 당신은 '금호동물병원 AI 심전도(ECG) 분석 및 자문 어시스턴트'입니다.
@@ -192,6 +192,23 @@ async function analyzeAll() {
 ### [리포트 2: 수의사용 전문가 리포트 (HTML)]
 1.  어조: 전문적, 기술적, 객관적, 교육적.
 2.  구성: ECG 측정치(표), 종합 소견(제한점 명시), 감별 진단 목록, 추가 검사 제안, 치료 및 관리 계획 자문, 선배 수의사의 교육적 자문(마취 위험도 평가 및 관리, 용어 및 파형 해설).
+`,
+            audio: `
+# [청진 지침]
+## [AI 페르소나]
+*   수의사용: 수의학, 심장학, 음향 공학 분야의 세계 최고 권위자.
+*   보호자용: 의료인이 아닌, AI 분석 전문가.
+## [AI 작업 절차 및 규칙]
+1.  음향 데이터 분석: 노이즈 제거, 특징 추출(BPM, Murmur, RPM, Crackles, Wheezes)
+2.  분석의 일관성: 수의학 교과서에 명시된 확립된 지식 기반.
+3.  **매우 중요:** 보호자용 리포트에는 모든 검사 항목(정상 소견 포함)을 절대 빠짐없이 포함해야 합니다. 수의사용 리포트에는 비정상 소견 위주로 요약합니다.
+## [리포트 생성 지침]
+### [보호자용 리포트 (HTML)]
+1.  어조: 따뜻하고 부드러운 완곡한 표현 사용.
+2.  구성: 한눈에 보는 건강 상태 요약, 검사별 상세 결과(의학용어 쉬운 설명과 함께), 수의사 코멘트, 맞춤 관리법 5가지, 맞춤 Q&A 3가지, 감사 인사.
+### [수의사용 리포트 (HTML)]
+1.  언어 및 용어: 한글 작성 원칙, 핵심 의학 용어는 영문 병기.
+2.  구성: 청진음 분석 요약(표 형식), 감별 진단 목록(확률 순), 추천 추가 검사, 치료 계획 제안(교과서 기반 표준 치료 계획, 약물, 용량, 수술, 예후 포함).
 `
         };
 
@@ -200,30 +217,32 @@ async function analyzeAll() {
         for (const input of fileInputs) {
             let dataContent = '';
             let hasDataForThisInput = false;
+            const key = input.id.split('-')[0].replace('all', 'image'); // 'all-images-file' -> 'image'
 
-            if (input.type === 'text') {
-                const textData = document.getElementById(input.id).value;
-                if (textData) {
+            if (input.type === 'excel') {
+                const file = document.getElementById(input.id).files[0];
+                if (file) {
                     hasDataForThisInput = true;
-                    dataContent = `[${input.name}] 텍스트 데이터:\n${textData}\n`;
+                    const textData = await excelFileToText(file);
+                    dataContent = `\n--- 다음 데이터 (내과) ---\n[내과 검사 결과] 엑셀 파일 데이터 (파일명: ${file.name}):\n${textData}\n[해당 데이터 분석 지침]:\n${prompts.internalMedicine}\n`;
                 }
-            } else {
+            } else if (input.type === 'image' || input.type === 'audio') {
                 const files = document.getElementById(input.id).files;
                 if (files.length > 0) {
                     hasDataForThisInput = true;
-                    dataContent = `[${input.name}] 파일 ${files.length}개가 아래 첨부되었습니다.\n`;
+                    dataContent = `\n--- 다음 데이터 (${input.name}) ---\n총 ${files.length}개의 ${input.name} 파일이 아래 순서대로 첨부되었습니다. 각 파일을 스스로 분류하고 분석해야 합니다.\n`;
                     for (const file of files) {
                         const filePart = await fileToGenerativePart(file);
                         parts.push(filePart);
                         dataContent += `- 파일명: ${file.name}\n`;
                     }
+                    dataContent += `[해당 데이터 분석 지침]:\n${prompts[key]}\n`;
                 }
             }
 
             if (hasDataForThisInput) {
                 hasAnyData = true;
-                const key = input.id.split('-')[0];
-                internalAnalysisInstructions += `\n--- 다음 데이터 (${input.name}) ---\n${dataContent}[해당 데이터 분석 지침]:\n${prompts[key]}\n`;
+                internalAnalysisInstructions += dataContent;
             }
         }
         
@@ -237,11 +256,12 @@ async function analyzeAll() {
 당신은 '금호동물병원'의 모든 데이터를 통합 분석하는 'AI 진단 마스터 어시스턴트'입니다. 당신의 임무는 지금부터 제공되는 환자 정보와 여러 종류의 검사 데이터, 그리고 각 데이터를 어떻게 처리해야 하는지에 대한 상세 지침을 모두 읽고, 최종적으로 **두 개의 완벽하게 분리된 HTML 리포트**를 생성하는 것입니다.
 
 **[최상위 절대 임무 및 규칙]**
-1.  **듀얼 리포트 생성:** 당신의 최종 결과물은 반드시 **두 개**여야 합니다: '보호자용 리포트'와 '수의사용 리포트'.
-2.  **분리 제출:** 두 리포트 사이에는 **반드시 \`<!-- AI_REPORT_SEPARATOR -->\` 라는 특수 구분자**를 삽입하여 제출해야 합니다. 이 구분자 외에 다른 어떤 텍스트도 두 리포트 사이에 있어서는 안 됩니다.
-3.  **지침 완벽 준수:** 지금부터 제공될 각 분야별 상세 지침을 완벽하게 준수하여 각 리포트를 작성해야 합니다. **특히 보호자용 리포트에는 모든 정상 수치를 반드시 포함하고, 수의사용 리포트는 비정상 소견 위주로 요약하는 규칙을 반드시 지켜야 합니다.**
-4.  **자율적 통합 및 생성:** 각 분야별 지침에 따라 내부적으로 분석을 수행하되, 최종 결과물은 **두 개의 통일된 리포트 형식**으로 제출해야 합니다. 예를 들어, '수의사용 리포트'에는 모든 과목의 비정상 소견, 마취 위험도 평가, 종합 감별 진단 목록 등이 포함되어야 합니다.
-5.  **최종 출력 형식:** 당신의 응답은 오직 HTML 코드와 그 사이의 구분자로만 구성되어야 합니다. 다른 어떤 설명도 추가하지 마십시오.
+1.  **AI 자동 분류 (매우 중요):** 당신의 첫 번째 임무는 첨부된 **이미지 파일들을 보고 스스로 어떤 분야(안과, 치과, 영상의학, 심전도)에 해당하는지 판단**하는 것입니다. 각 이미지를 올바른 분야의 전문가로서 분석해야 합니다. 예를 들어, 눈 사진은 '안과 지침'에 따라, 흉부 엑스레이는 '영상 지침'에 따라 분석합니다.
+2.  **듀얼 리포트 생성:** 당신의 최종 결과물은 반드시 **두 개**여야 합니다: '보호자용 리포트'와 '수의사용 리포트'.
+3.  **분리 제출:** 두 리포트 사이에는 **반드시 \`<!-- AI_REPORT_SEPARATOR -->\` 라는 특수 구분자**를 삽입하여 제출해야 합니다. 이 구분자 외에 다른 어떤 텍스트도 두 리포트 사이에 있어서는 안 됩니다.
+4.  **지침 완벽 준수:** 지금부터 제공될 각 분야별 상세 지침을 완벽하게 준수하여 각 리포트를 작성해야 합니다. **특히 보호자용 리포트에는 모든 정상 수치를 반드시 포함하고, 수의사용 리포트는 비정상 소견 위주로 요약하는 규칙을 반드시 지켜야 합니다.**
+5.  **자율적 통합:** 모든 분야의 분석 결과를 종합하여 '수의사용 리포트'에는 마취 위험도 평가, 종합 감별 진단 목록 등을 포함해야 합니다.
+6.  **최종 출력 형식:** 당신의 응답은 오직 HTML 코드와 그 사이의 구분자로만 구성되어야 합니다. 다른 어떤 설명도 추가하지 마십시오.
 
 ---
 **[환자 정보]**
@@ -275,10 +295,8 @@ ${internalAnalysisInstructions}
         let guardianReportHtml = reports[0] || '<p>보호자용 리포트를 생성하지 못했습니다.</p>';
         let veterinarianReportHtml = reports[1] || '<p>수의사용 리포트를 생성하지 못했습니다.</p>';
 
-        // AI가 코드 블록 마크다운을 포함할 경우 제거
         guardianReportHtml = guardianReportHtml.replace(/^```html\n?/, '').replace(/\n?```$/, '');
         veterinarianReportHtml = veterinarianReportHtml.replace(/^```html\n?/, '').replace(/\n?```$/, '');
-
 
         guardianReportContent.innerHTML = guardianReportHtml;
         veterinarianReportContent.innerHTML = veterinarianReportHtml;
