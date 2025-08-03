@@ -90,7 +90,7 @@ async function handleFormSubmit(event) {
     if(fileInfoText === '') fileInfoText = '등록된 검사 파일 없음';
 
     // =========================================================================================
-    // 중요: 여기에 요청하신 모든 지침을 수정/생략 없이 그대로 포함했습니다.
+    // 중요: 여기에 요청하신 모든 지침을 수정/생략 없이 100% 그대로 포함했습니다.
     // =========================================================================================
     const vetSystemInstruction = `[SYSTEM]
 당신은 고도로 훈련된 수의학 임상 데이터 분석 AI입니다. 당신의 임무는 여러 개의 수의학 진단 보고서(HTML 형식)를 종합적으로 분석하여, 수의사의 진단을 돕기 위한 간결하고 데이터 중심적인 **'AI 진단 인사이트 리포트'**를 생성하는 것입니다.
@@ -348,7 +348,28 @@ AI 종합 분석 및 감별 진단 (AI Synthesis & Differential Diagnosis):
         switchTab({ currentTarget: document.querySelector('.tab-link.active') }, 'vet-report');
     } catch (error) {
         console.error('Error:', error);
-        alert(`리포트 생성 중 오류가 발생했습니다: ${error.message}`);
+        
+        let detailedErrorMessage = "알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+
+        if (error.message.includes("API 호출 실패")) {
+            try {
+                const errorJsonText = error.message.split('API 호출 실패: ')[1];
+                const errorJson = JSON.parse(errorJsonText);
+                const serverErrorText = errorJson.error.split('Server Error: ')[1];
+                const serverError = JSON.parse(serverErrorText);
+                
+                if (serverError.code === 404 && serverError.message.includes("Publisher Model")) {
+                     detailedErrorMessage = "치명적 오류: AI 모델을 찾을 수 없습니다.\n\n[원인]\n서버(Cloud Run)에 설정된 AI 모델 이름이 잘못되었거나, 해당 지역에서 지원되지 않습니다.\n\n[해결 방법]\n개발자는 Cloud Run에 배포된 index.js 파일을 열어, Vertex AI 모델 이름을 현재 사용 가능한 최신 버전(예: 'gemini-1.5-pro-001')으로 수정한 후 재배포해야 합니다.";
+                } else {
+                    detailedErrorMessage = `서버 오류: ${serverError.message}`;
+                }
+            } catch(e) {
+                detailedErrorMessage = `리포트 생성 중 오류가 발생했습니다:\n${error.message}`;
+            }
+        }
+        
+        alert(detailedErrorMessage);
+
     } finally {
         loader.classList.add('hidden');
         analyzeBtn.disabled = false;
@@ -358,6 +379,7 @@ AI 종합 분석 및 감별 진단 (AI Synthesis & Differential Diagnosis):
 
 async function callGeminiAPI(prompt) {
     const CLOUD_FUNCTION_URL = 'https://khhospital-ai-analysis-636821524687.asia-northeast3.run.app';
+
     const response = await fetch(CLOUD_FUNCTION_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
