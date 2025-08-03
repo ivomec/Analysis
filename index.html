@@ -8,8 +8,8 @@
 </head><body>
     <div class="container">
         <header>
-            <h1>금호동물병원 AI 통합 진단 시스템 (v5.3 - 엑셀 업로드)</h1>
-            <p class="subtitle">AI가 모든 검사 결과를 유기적으로 분석하여 두 개의 최종 리포트를 생성합니다.</p>
+            <h1>금호동물병원 AI 통합 진단 시스템 (v6.0 - AI 자동 분류)</h1>
+            <p class="subtitle">AI가 모든 검사 자료를 스스로 분류하고 분석하여 최종 리포트를 생성합니다.</p>
         </header>
         <main>
             <!-- 환자 정보 입력 카드 (이전과 동일) -->
@@ -22,26 +22,30 @@
             </div>
             
             <div class="card">
-                <h2>전체 검사 자료 업로드 (다중 선택 가능)</h2>
-                <p style="text-align: center; margin-bottom: 20px;">분석을 원하는 모든 과목의 데이터를 아래에 입력하거나 업로드해주세요.</p>
+                <h2>전체 검사 자료 일괄 업로드</h2>
+                <p style="text-align: center; margin-bottom: 20px;">분석을 원하는 모든 과목의 데이터를 아래에 한 번에 업로드해주세요.</p>
                 
-                <!-- ★★★ 내과 입력 방식 변경 ★★★ -->
                 <div class="form-group">
                     <label for="internal-medicine-file">1. 내과 (혈액/소변검사 엑셀 파일)</label>
                     <input type="file" id="internal-medicine-file" accept=".xlsx, .xls, .csv">
                 </div>
 
-                <div class="form-group"><label for="ophthalmology-file">2. 안과 (안구 사진)</label><input type="file" id="ophthalmology-file" accept="image/*" multiple></div>
-                <div class="form-group"><label for="dentistry-file">3. 치과 (구강 사진)</label><input type="file" id="dentistry-file" accept="image/*" multiple></div>
-                <div class="form-group"><label for="imaging-file">4. 영상 (X-ray, 초음파)</label><input type="file" id="imaging-file" accept="image/*" multiple></div>
-                <div class="form-group"><label for="auscultation-file">5. 청진 (음성 파일)</label><input type="file" id="auscultation-file" accept="audio/*" multiple></div>
-                <div class="form-group"><label for="ecg-file">6. 심전도 (ECG 이미지)</label><input type="file" id="ecg-file" accept="image/*" multiple></div>
+                <!-- ★★★ 모든 이미지 업로드를 하나로 통합 ★★★ -->
+                <div class="form-group">
+                    <label for="all-images-file">2. 안과/치과/영상/심전도 (모든 이미지/영상 파일)</label>
+                    <input type="file" id="all-images-file" accept="image/*,video/*" multiple>
+                </div>
+
+                <div class="form-group">
+                    <label for="auscultation-file">3. 청진 (음성 파일)</label>
+                    <input type="file" id="auscultation-file" accept="audio/*" multiple>
+                </div>
             </div>
 
-            <button id="analyze-button">최종 리포트 생성 시작</button>
+            <button id="analyze-button">AI 자동 분석 및 리포트 생성</button>
             <div id="loading" class="hidden">
                 <div class="spinner"></div>
-                <p>AI가 모든 검사 결과를 종합 분석하여 최종 리포트를 생성 중입니다. 잠시만 기다려주세요...</p>
+                <p>AI가 자료를 자동 분류하고 종합 분석 중입니다. 잠시만 기다려주세요...</p>
             </div>
 
             <div id="results" class="hidden">
@@ -50,7 +54,6 @@
             </div>
         </main>
     </div>
-    <!-- ★★★ 엑셀 파일 읽기용 라이브러리 추가 (매우 중요!) ★★★ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="script.js"></script>
 </body>
