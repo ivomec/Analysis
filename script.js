@@ -1,5 +1,5 @@
 // 1. 여기에 발급받은 API 키를 입력하세요.
-const API_KEY = 'AIzaSyCNGKClrJfKKHjNQ9CatVWlUva2YZJh7MM';
+const API_KEY = 'AIzaSyCNGKClrJfKKHjNQ9CatVWlUva2YZJh7MM'; // 실제 사용 시 유효한 API 키로 변경해주세요.
 const MODEL_NAME = 'gemini-1.5-pro-latest';
 
 // 2. HTML 요소 가져오기
@@ -76,6 +76,9 @@ async function analyzeAll() {
             { id: 'auscultation-file', type: 'audio', name: '청진' }
         ];
 
+        // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+        // ★★★★★★★★★★★★★★★★ 원장님의 모든 상세 지침이 여기에 그대로 포함됩니다. ★★★★★★★★★★★★★★★★★
+        // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
         const prompts = {
             internalMedicine: `
 # [내과 보호자용 지침]
@@ -143,7 +146,7 @@ async function analyzeAll() {
 ## [ROLE & PERSONA]
 당신은 '치과 특화 금호동물병원'의 유능한 AI 어시스턴트입니다.
 ## [분석 규칙]
-1.  안면 비대칭 분석, 좌우 및 상하 방향 판단, 원장님 진단 집중 분석을 수행합니다.
+1.  안면 비대칭 분석, 좌우 및 상하 방향 판단, 원장님 진단 집중 분석를 수행합니다.
 2.  모든 분석은 검증된 수의치과학 교과서를 기반으로 합니다.
 ## [레포트 생성 가이드라인]
 ### [보호자용 리포트 (HTML)]
@@ -210,8 +213,9 @@ async function analyzeAll() {
 2.  구성: 청진음 분석 요약(표 형식), 감별 진단 목록(확률 순), 추천 추가 검사, 치료 계획 제안(교과서 기반 표준 치료 계획, 약물, 용량, 수술, 예후 포함).
 `
         };
-
-        const dentistFindings = document.getElementById('dentist-findings').value;
+        
+        // ★★★ FIX: 아래의 중복 선언을 제거했습니다. ★★★
+        // const dentistFindings = document.getElementById('dentist-findings').value;
         if (dentistFindings) {
             const originalImagePrompt = prompts.image;
             prompts.image = `
@@ -299,7 +303,7 @@ ${internalAnalysisInstructions}
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`API 호출 실패: ${response.statusText} - ${errorData.error.message}`);
+            throw new Error(`API 호출 실패: ${response.statusText} - ${errorData.error?.message || 'Unknown error'}`);
         }
 
         const responseData = await response.json();
@@ -319,7 +323,7 @@ ${internalAnalysisInstructions}
     } catch (error) {
         console.error('분석 중 오류 발생:', error);
         guardianReportContent.innerHTML = `<p style="color: red;">오류가 발생했습니다: ${error.message}</p>`;
-        resultsContainer.classList.remove('hidden');
+        resultsContainer.classList.remove('hidden'); // 결과 컨테이너를 보여줘서 오류 메시지를 표시
     } finally {
         loadingIndicator.classList.add('hidden');
     }
