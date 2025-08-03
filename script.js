@@ -1,5 +1,5 @@
 // 1. 여기에 발급받은 API 키를 입력하세요.
-const API_KEY = 'AIzaSyCNGKClrJfKKHjNQ9CatVWlUva2YZJh7MM'; // 실제 사용 시 유효한 API 키로 변경해주세요.
+const API_KEY = ''; // 실제 사용 시 유효한 API 키로 변경해주세요.
 const MODEL_NAME = 'gemini-1.5-pro-latest';
 
 // 2. HTML 요소 가져오기
