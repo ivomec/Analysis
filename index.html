@@ -3,39 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 수의 분석 시스템</title>
+    <title>🩺 AI 수의 분석 시스템 🐾</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <div class="container">
         <header>
+            <div class="logo">🩺🐾</div>
             <h1>AI 수의 분석 리포트 시스템</h1>
-            <p>환자 정보와 검사 결과를 입력하면 Gemini 1.5 Pro가 분석 리포트를 생성합니다.</p>
+            <p>환자 정보와 검사 파일을 등록하면 Gemini 1.5 Pro가 리포트를 생성합니다.</p>
         </header>
 
         <form id="patient-form">
             <fieldset>
-                <legend>환자 정보 입력</legend>
+                <legend>✨ 환자 정보 입력</legend>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="patient-name">이름</label>
+                        <label for="patient-name">🐾 이름</label>
                         <input type="text" id="patient-name" required>
                     </div>
                     <div class="form-group">
-                        <label for="species">종</label>
+                        <label for="species">🐕 종</label>
                         <select id="species">
                             <option value="개">개 (Dog)</option>
                             <option value="고양이">고양이 (Cat)</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="breed">품종 (직접 입력 또는 선택)</label>
-                        <input type="text" id="breed" list="breed-list" placeholder="품종을 입력하거나 선택하세요">
+                        <label for="breed">မျိုး 품종</label>
+                        <input type="text" id="breed" list="breed-list" placeholder="품종을 입력하거나 선택">
                         <datalist id="breed-list"></datalist>
                     </div>
                     <div class="form-group age-group">
-                        <label>나이</label>
+                        <label>🎂 나이</label>
                         <div>
                             <input type="number" id="age-years" min="0" placeholder="살">
                             <label for="age-years">년</label>
@@ -44,7 +46,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>성별</label>
+                        <label>⚧️ 성별</label>
                         <div class="radio-group">
                             <input type="radio" id="male" name="sex" value="남" checked> <label for="male">남</label>
                             <input type="radio" id="female" name="sex" value="여"> <label for="female">여</label>
@@ -52,33 +54,46 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="weight">체중 (kg)</label>
+                        <label for="weight">⚖️ 체중 (kg)</label>
                         <input type="number" id="weight" step="0.1" min="0" placeholder="예: 5.2">
                     </div>
-                    <div class="form-group">
-                        <label for="visit-date">검진일</label>
+                     <div class="form-group">
+                        <label for="visit-date">🗓️ 검진일</label>
                         <input type="date" id="visit-date" required>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="special-notes">특이사항</label>
-                    <textarea id="special-notes" rows="4" placeholder="환자의 주요 증상, 과거 병력 등 특이사항을 기재해주세요."></textarea>
+                    <label for="special-notes">📝 특이사항</label>
+                    <textarea id="special-notes" rows="2" placeholder="주요 증상, 과거 병력 등"></textarea>
                 </div>
                  <div class="form-group">
-                    <label for="dental-findings">치과 소견 (수의사)</label>
-                    <textarea id="dental-findings" rows="4" placeholder="원장님의 치과 관련 진단 소견을 입력해주세요. (예: 104, 204 치아 치주염)"></textarea>
+                    <label for="dental-findings">🦷 치과 소견 (수의사)</label>
+                    <textarea id="dental-findings" rows="2" placeholder="원장님 진단 소견 (예: 104 치주염)"></textarea>
                 </div>
             </fieldset>
 
             <fieldset>
-                <legend>검사 결과 입력</legend>
-                <div class="form-group">
-                     <label for="medical-records">의료 기록 및 검사 결과</label>
-                    <textarea id="medical-records" rows="15" placeholder="이곳에 혈액검사, 방사선, 초음파, 심전도 판독 결과 등 모든 텍스트 기반 검사 결과를 붙여넣어 주세요."></textarea>
+                <legend>📂 검사 파일 등록</legend>
+                <div class="file-upload-grid">
+                    <div class="form-group">
+                        <label for="image-files" class="file-upload-label">🖼️ 이미지 파일 (사진/엑스레이)</label>
+                        <input type="file" id="image-files" accept="image/*" multiple>
+                        <div id="image-file-list" class="file-list"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="audio-files" class="file-upload-label">🎵 오디오 파일 (청진)</label>
+                        <input type="file" id="audio-files" accept="audio/*" multiple>
+                        <div id="audio-file-list" class="file-list"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="excel-file" class="file-upload-label">📊 엑셀 파일 (혈액검사)</label>
+                        <input type="file" id="excel-file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+                        <div id="excel-file-list" class="file-list"></div>
+                    </div>
                 </div>
             </fieldset>
 
-            <button type="submit" id="analyze-btn">분석 시작</button>
+            <button type="submit" id="analyze-btn">🚀 AI 분석 시작 🚀</button>
         </form>
 
         <div id="loader" class="hidden">
@@ -88,16 +103,11 @@
 
         <div id="results-container" class="hidden">
             <div class="tabs">
-                <button class="tab-link active" onclick="switchTab(event, 'vet-report')">수의사용 리포트</button>
-                <button class="tab-link" onclick="switchTab(event, 'owner-report')">보호자용 리포트</button>
+                <button class="tab-link active" onclick="switchTab(event, 'vet-report')">👨‍⚕️ 수의사용 리포트</button>
+                <button class="tab-link" onclick="switchTab(event, 'owner-report')">❤️ 보호자용 리포트</button>
             </div>
-
-            <div id="vet-report" class="tab-content active">
-                <!-- 수의사용 AI 분석 결과가 여기에 삽입됩니다. -->
-            </div>
-            <div id="owner-report" class="tab-content">
-                <!-- 보호자용 AI 분석 결과가 여기에 삽입됩니다. -->
-            </div>
+            <div id="vet-report" class="tab-content active"></div>
+            <div id="owner-report" class="tab-content"></div>
         </div>
     </div>
 
