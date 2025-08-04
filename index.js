@@ -2,14 +2,22 @@ const { VertexAI } = require('@google-cloud/vertexai');
 const express = require('express');
 const cors = require('cors');
 const app = express();
-app.use(cors());
+
+// [수정] 우리 웹사이트 주소만 허용하도록 CORS 옵션을 상세히 설정합니다.
+const corsOptions = {
+    origin: 'https://ivonnec.github.io',
+    optionsSuccessStatus: 200 // 일부 브라우저 호환성을 위해 204 대신 200 사용
+};
+
+app.use(cors(corsOptions));
+
 app.use(express.json({ limit: '50mb' }));
+
 app.get('/', (req, res) => {
   res.status(200).send("<h1>✅ AI 분석 서버가 정상적으로 실행 중입니다.</h1>");
 });
 
-// [수정] OPTIONS 요청을 명시적으로 처리하는 코드 추가
-app.options('/', cors());
+app.options('/', cors(corsOptions));
 
 app.post('/', async (req, res) => {
     const vertex_ai = new VertexAI({
@@ -32,6 +40,7 @@ app.post('/', async (req, res) => {
         res.status(500).json({ error: `Server Error: ${error.message}` });
     }
 });
+
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
     console.log(`Server is running and listening on port ${port}`);
