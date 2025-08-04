@@ -7,13 +7,16 @@ app.use(express.json({ limit: '50mb' }));
 app.get('/', (req, res) => {
   res.status(200).send("<h1>✅ AI 분석 서버가 정상적으로 실행 중입니다.</h1>");
 });
+
+// [수정] OPTIONS 요청을 명시적으로 처리하는 코드 추가
+app.options('/', cors());
+
 app.post('/', async (req, res) => {
     const vertex_ai = new VertexAI({
         project: 'ai-analysis-467907',
-        // [최종 수정] location을 'us-central1'으로 변경
         location: 'us-central1',
     });
-    const model = 'gemini-1.5-pro';
+    const model = 'gemini-1.0-pro'; // 진단을 위해 이전 버전 모델 사용
     const generativeModel = vertex_ai.getGenerativeModel({ model });
     try {
         const prompt = req.body.prompt;
