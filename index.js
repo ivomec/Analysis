@@ -10,9 +10,9 @@ app.get('/', (req, res) => {
 app.post('/', async (req, res) => {
     const vertex_ai = new VertexAI({
         project: 'ai-analysis-467907',
-        location: 'asia-northeast1', // 도쿄 리전 유지
+        // [최종 수정] location을 'us-central1'으로 변경
+        location: 'us-central1',
     });
-    // [수정] 모델 이름을 'gemini-1.5-pro'로 변경
     const model = 'gemini-1.5-pro';
     const generativeModel = vertex_ai.getGenerativeModel({ model });
     try {
