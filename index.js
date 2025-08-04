@@ -16,7 +16,7 @@ app.post('/', async (req, res) => {
         project: 'ai-analysis-467907',
         location: 'us-central1',
     });
-    const model = 'gemini-1.0-pro'; // 진단을 위해 이전 버전 모델 사용
+    const model = 'gemini-1.0-pro';
     const generativeModel = vertex_ai.getGenerativeModel({ model });
     try {
         const prompt = req.body.prompt;
