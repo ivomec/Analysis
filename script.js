@@ -141,8 +141,8 @@ async function handleFormSubmit(event) {
 }
 
 async function callGeminiAPI(prompt) {
-    // [최종 수정] 새로운 서버 URL로 교체합니다.
-    const CLOUD_FUNCTION_URL = 'https://analysis-636821524687.asia-northeast1.run.app';
+    // [중요] 아래 주소를 Cloud Run에서 확인한 본인의 실제 서버 주소로 교체해야 합니다.
+    const CLOUD_FUNCTION_URL = '여기에_Cloud_Run에서_확인한_새로운_URL을_붙여넣으세요';
 
     const response = await fetch(CLOUD_FUNCTION_URL, {
         method: 'POST',
@@ -156,7 +156,6 @@ async function callGeminiAPI(prompt) {
     const data = await response.json();
     let text = data.report;
     if (text) {
-        // AI가 응답에 추가하는 마크다운 코드 블록을 제거합니다.
         text = text.replace(/^```html\s*/, '').replace(/\s*```$/, '');
     }
     return text || '결과를 생성하지 못했습니다. 입력값을 확인해주세요.';
